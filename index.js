@@ -68,8 +68,6 @@ export class PowerJS {
     return { ...this.#dll }; // Prevent dll sets
   }
 
-  /* Misc */
-
   importDll(dllpath, defenition) {
     assert(this.#started, false, "Cannot import dlls after starting");
 
@@ -91,13 +89,18 @@ export class PowerJS {
     };
   }
 
-  /* End Misc */
-
   #extensions = {};
-  #ext = {};
 
-  get ext() {
-    return this.#ext;
+  getExtension(extClassOrName) {
+    if (extClassOrName.prototype instanceof Extension) {
+      return this.#extensions[extClassOrName];
+    } else if (typeof extClassOrName == "string") {
+      for (const extension of this.#extensions) {
+        if (extension.name == extClassOrName) return extension;
+      }
+    }
+
+    // Undefined?
   }
 
   extend(...extclasses) {
@@ -123,7 +126,7 @@ export class PowerJS {
           ? extension.name.toLowerCase().trim()
           : "extension";
 
-      if (this.#ext[extname] == undefined) this.#ext[extname] = extension;
+      extension.name = extname;
     }
   }
 
@@ -141,8 +144,16 @@ export class PowerJS {
     runas = false,
     autoStart = true,
     extensions = [],
+    dlls = {},
   } = {}) {
     additionalShellNames.push("pwsh", "powershell");
+
+    dlls = typeof dlls == "object" ? dlls : {};
+    for (const dll_import in dlls) {
+      if (Object.hasOwnProperty.call(dlls, dll_import)) {
+        this.importDll(dll_import, dlls[dll_import]);
+      }
+    }
 
     // Find optimal shell
 

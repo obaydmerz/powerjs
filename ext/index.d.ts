@@ -10,7 +10,7 @@ declare export class Extension {
   /**
    * A reference to the instance of the PowerJS class that this extension is associated with.
    */
-  instance: PowerJS | null;
+  instance: PowerJS;
 
   /**
    * The name of the extension.

@@ -1,4 +1,4 @@
-import { Extension } from "./ext/index.js";
+import { Extension, ExtensionClass } from "./ext/index.js";
 import { ExecResult } from "./lib/result.js";
 
 /**
@@ -18,6 +18,16 @@ interface PowerJSOptions {
    * Note: Shell is always spawned even if `autoStart` is set to false!
    */
   autoStart?: boolean;
+
+  /**
+   * Extensions to import.
+   */
+  extensions: ExtensionClass[];
+
+  /**
+   * DLLs to import.
+   */
+  dlls: Record<string, Record<string, string[]>>;
 }
 
 /**
@@ -91,16 +101,19 @@ declare class PowerJS {
   importDll(dllpath: string, defenition: Record<string, any>): void;
 
   /**
-   * Extension-related properties and methods...
+   * Get an extension by class or name.
+   *
+   * @param extClassOrName - The extension class or name to retrieve.
+   * @returns The extension instance or undefined if not found.
    */
-  readonly ext: {
-    /**
-     * Returns an instance of an extension by name.
-     * @param name The name of the extension.
-     * @returns An instance of the extension.
-     */
-    [name: string]: Extension;
-  };
+  getExtension(extClassOrName: string | ExtensionClass): Extension | undefined;
+
+  /**
+   * Extend PowerJS with custom extensions.
+   *
+   * @param extclasses - The extension classes to add to PowerJS.
+   */
+  extend(...extclasses: ExtensionClass[]): void;
 
   /**
    * Gets the DLL-related properties and methods.
