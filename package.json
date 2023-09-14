@@ -1,0 +1,10 @@
+{
+  "name": "powerjs",
+  "version": "1.0.0",
+  "description": "Do the powershell magic... right from your script!",
+  "main": "index.js",
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
