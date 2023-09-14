@@ -1,20 +1,45 @@
 import { spawn } from "node:child_process";
 import { generateAddType, generateDllDirectObj } from "./lib/typeUtils.js";
-import { assert, sniffJSON } from "./lib/utils.js";
+import { assert, prettyPrintErr } from "./lib/utils.js";
 import { Extension } from "./ext/index.js";
+import { ExecResult } from "./lib/result.js";
 
 const beforerun = `
-  function Z {
+  function Out {
+    [CmdletBinding()]
     param (
-      $o,
-      $d = 2
+      [Parameter(ValueFromPipeline = $true)]
+      $o
     )
 
-    return ConvertTo-Json($o) -Compress -Depth $d -WarningAction SilentlyContinue 
-  } 
+    return ConvertTo-Json($o) -Compress -Depth 2 -WarningAction SilentlyContinue
+  }
 
-  function Y {
+  function Out-Default {
+    [CmdletBinding()]
     param (
+      [Parameter(ValueFromPipeline = $true)]
+      $o
+    )
+
+    if($o.GetType() -eq [System.Management.Automation.ErrorRecord]) {
+      $d = Out($o.InvocationInfo);
+      $i = $o.FullyQualifiedErrorId;
+      Write-Host('¬*{"err": "' + $i + '", "data": ' + $d + '}*¬')
+    }
+    elseif ($Null -eq $o) {
+      Write-Host('¬¬null¬¬')
+    }
+    else {
+      $d = Out($o);
+      Write-Host('¬¬' + $d + '¬¬')
+    }
+  }
+
+  function In {
+    [CmdletBinding()]
+    param (
+      [Parameter(ValueFromPipeline=$true)]
       $o,
       $d = 2
     )
@@ -106,6 +131,7 @@ export class PowerJS {
     assert(this.#started, false, "Cannot start twice!");
     this.extend(...extensions);
     this.#child.stdin.write(generateAddType(this.#imported_dlls) + beforerun);
+    //console.log(generateAddType(this.#imported_dlls) + beforerun);
     this.#dll = generateDllDirectObj(this.#imported_dlls, this.exec.bind(this));
     this.#started = true;
   }
@@ -132,7 +158,7 @@ export class PowerJS {
       throw "Cannot find a powershell interpreter! Try installing powershell or adding your one!";
     }
 
-    // Perfom Runas: Coming soon
+    // TODO: Make RunAs: Coming soon
     /* if (runas) {
       var command = "";
       if (typeof runas == "object") {
@@ -179,11 +205,8 @@ exit
     const update = () => {
       if (!this.#working) {
         if (typeof this.#queue[0] == "object") {
-          this.#child.stdin.write(
-            this.#queue[0].command +
-              (this.#queue[0].command.endsWith("\n") ? "" : "\n")
-          );
-          //console.log(this.#queue[0].command);
+          let command = this.#queue[0].command;
+          this.#child.stdin.write("&{" + command + "}\n");
           this.#working = true;
         }
       }
@@ -199,12 +222,10 @@ exit
 
   #process(out, err) {
     if (typeof this.#queue[0] == "object") {
-      this.#queue.shift().resolve({
-        out,
-        err,
-        json: sniffJSON(out),
-        timeout: false,
-      });
+      const q = this.#queue.shift();
+      const res = new ExecResult(out, err);
+      if (res.err != null) prettyPrintErr(res.err);
+      q.resolve(res);
     }
     this.#working = false;
   }
