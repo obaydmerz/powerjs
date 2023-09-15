@@ -3,6 +3,7 @@
 PowerJS is a powerful JavaScript library that enables you to seamlessly integrate and harness the magic of PowerShell directly from your scripts. Whether you need to automate administrative tasks, manage Windows processes, or interact with DLLs, PowerJS provides a user-friendly interface to supercharge your JavaScript applications.
 
 ### Key Features
+
 - **100% Pure javascript (no native files included):** Enjoy more flexibility with a lower cost and a shorter setup process.
 
 - **Dependency-less:** PowerJS eliminates the need for additional dependencies, ensuring a lightweight and hassle-free integration with your projects.
@@ -28,11 +29,12 @@ PowerJS is a powerful JavaScript library that enables you to seamlessly integrat
 - ~~**Elevated Permissions:** Run PowerShell commands with elevated permissions when necessary, providing the ability to execute administrative tasks and interact with protected system resources.~~ **( Coming Soon... )**
 
 ## Installation
+
 Currently there are a way to install it directly from github.
 I will manage to push it to npm very soon!
 
 ```bash
-npm install git+https://github.com/obaydmerz/powerjs.git
+npm install obaydmerz/powerjs
 ```
 
 ## Examples
@@ -47,7 +49,7 @@ instance.exec("$PSVersionTable").then(({ result }) => {
   // You may notice some slowdown, that's because of the instance init process.
   // After the instance is started, you can enjoy a blazing fast environnement!
   console.log("Currently on Powershell v" + result.PSVersion.Major + "!");
-})
+});
 ```
 
 ```javascript
@@ -63,16 +65,18 @@ const instance = new PowerJS({
   },
 });
 
-instance.dll.user32.MessageBox(0, "Lock your computer?", "Warning", 3).then(async ({ result }) => {
-  if (result == 6) {
-    await instance.dll.user32.LockWorkStation();
-  }
-});
+instance.dll.user32
+  .MessageBox(0, "Lock your computer?", "Warning", 3)
+  .then(async ({ result }) => {
+    if (result == 6) {
+      await instance.dll.user32.LockWorkStation();
+    }
+  });
 
 // You should take a deep lock to see how this magic happens.
 // This is a super easy out-of-the-box alternative to node-ffi.
-
 ```
+
 ```javascript
 // Make an extension
 import { PowerJS, Extension } from "../index.js";
@@ -99,7 +103,8 @@ myAwesomeExt.getVersion().then((versionMajor) => {
 });
 ```
 
-***Easy, isn't it?***
+**_Easy, isn't it?_**
 
 ### Read more
+
 For more information and advanced usage, check out the [PowerJS Wiki](https://github.com/obaydmerz/powerjs/wiki)
