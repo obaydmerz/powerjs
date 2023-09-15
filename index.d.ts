@@ -1,5 +1,5 @@
 import { Extension, ExtensionClass } from "./ext/index.js";
-import { ExecResult } from "./lib/result.js";
+import { Result } from "./lib/result.js";
 
 /**
  * Represents options for configuring the PowerJS instance.
@@ -60,10 +60,6 @@ interface PowerJSExecConfig {
    * Set to `0` to disable timeout. ( NOT RECOMMENDED )
    */
   timeout?: number;
-  /**
-   * Does the timeout trigger a `resolve({...timeout: true})` or a `reject()`.
-   */
-  safeTimeout?: boolean;
 }
 
 /**
@@ -90,7 +86,7 @@ declare class PowerJS {
    * @returns A promise that resolves with the execution result.
    * @throws If the shell isn't initiated yet.
    */
-  exec(config: PowerJSExecConfig | String): Promise<ExecResult>;
+  exec(config: PowerJSExecConfig | String): Promise<Result>;
 
   /**
    * Imports a DLL and its definitions for use in PowerShell commands.
@@ -129,4 +125,4 @@ declare class PowerJS {
   };
 }
 
-export { PowerJS, Extension, PowerJSOptions, RunAsOptions, PowerJSExecConfig };
+export { PowerJS, Extension, Result, PowerJSOptions, RunAsOptions, PowerJSExecConfig };

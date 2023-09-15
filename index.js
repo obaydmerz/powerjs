@@ -1,8 +1,13 @@
 import { spawn } from "node:child_process";
 import { generateAddType, generateDllDirectObj } from "./lib/typeUtils.js";
-import { assert, prettyPrintErr } from "./lib/utils.js";
+import { assert, extractData } from "./lib/utils.js";
 import { Extension } from "./ext/index.js";
-import { ExecResult } from "./lib/result.js";
+import { Result } from "./lib/result.js";
+import {
+  IncompleteCommand,
+  TimeoutException,
+  handleError,
+} from "./lib/errors.js";
 
 const beforerun = `
   function Out {
@@ -11,31 +16,31 @@ const beforerun = `
       [Parameter(ValueFromPipeline = $true)]
       $o
     )
-
     return ConvertTo-Json($o) -Compress -Depth 2 -WarningAction SilentlyContinue
   }
-
+  function Out-Error {
+    $a = $o.FullyQualifiedErrorId;
+    $b = $o.InvocationInfo.InvocationName;
+    $c = $o.InvocationInfo.ScriptLineNumber;
+    $d = $o.InvocationInfo.OffsetInLine;
+    Write-Host('¬*{"code": "' + $a + '", "term": "' + $b + '", "line": ' + $c + ', "pos": ' + $d + '}*¬');
+  }
   function Out-Default {
     [CmdletBinding()]
     param (
       [Parameter(ValueFromPipeline = $true)]
       $o
     )
-
-    if($o.GetType() -eq [System.Management.Automation.ErrorRecord]) {
-      $d = Out($o.InvocationInfo);
-      $i = $o.FullyQualifiedErrorId;
-      Write-Host('¬*{"err": "' + $i + '", "data": ' + $d + '}*¬')
+    if(($o -is [System.Exception]) -or ($o -is [System.Management.Automation.ErrorRecord])) {
+    Out-Error($o);
     }
     elseif ($Null -eq $o) {
-      Write-Host('¬¬null¬¬')
     }
     else {
-      $d = Out($o);
-      Write-Host('¬¬' + $d + '¬¬')
+    $d = Out($o);
+    Write-Host('¬¬' + $d + '¬¬')
     }
   }
-
   function In {
     [CmdletBinding()]
     param (
@@ -43,11 +48,10 @@ const beforerun = `
       $o,
       $d = 2
     )
-
     return ConvertFrom-Json($o) -Depth $d -AsHashtable -WarningAction SilentlyContinue 
-  } 
-
+  }
   function prompt { return "" }
+
 `;
 
 export class PowerJS {
@@ -55,7 +59,6 @@ export class PowerJS {
   #child = null;
 
   #readout = null; // Null is used to ignore the first result
-  #readerr = "";
   #started = false;
   #shell = "";
 
@@ -66,6 +69,11 @@ export class PowerJS {
 
   get dll() {
     return { ...this.#dll }; // Prevent dll sets
+  }
+
+  get shell() {
+    // Used shell
+    return this.#shell;
   }
 
   importDll(dllpath, defenition) {
@@ -191,6 +199,7 @@ exit
     } */
 
     this.#child.stdout.on("data", (data) => {
+      data = data.toString();
       if (data == "PS>") {
         if (this.#readout != null) {
           this.#process(
@@ -204,13 +213,21 @@ exit
 
         this.#readout = "";
         this.#readerr = "";
+      } else if (
+        data.startsWith(">") &&
+        this.#readout != null &&
+        (this.#readout.length == 0 || this.#readout.endsWith("\n"))
+      ) {
+        // Incomplete command!!!
+        this.#readerr = "";
+        this.#readout = "";
+        if (this.#working && this.#queue[0]) {
+          this.#child.stdin.write("\x03"); // Close that
+          this.#queue.shift().trigger.incompleteCommand();
+        }
       } else {
         if (this.#readout != null) this.#readout += data;
       }
-    });
-
-    this.#child.stderr.on("data", (data) => {
-      this.#readerr += data;
     });
 
     const update = () => {
@@ -232,12 +249,8 @@ exit
   }
 
   #process(out, err) {
-    if (typeof this.#queue[0] == "object") {
-      const q = this.#queue.shift();
-      const res = new ExecResult(out, err);
-      if (res.err != null) prettyPrintErr(res.err);
-      q.resolve(res);
-    }
+    if (typeof this.#queue[0] == "object")
+      this.#queue.shift().resolve(out, err);
     this.#working = false;
   }
 
@@ -248,7 +261,6 @@ exit
     config = {
       command: "",
       timeout: 20000,
-      safeTimeout: true,
       ...(typeof config == "object" ? config : {}),
     };
 
@@ -256,20 +268,33 @@ exit
       let tm = null;
       if (config.timeout > 0) {
         tm = setTimeout(function () {
-          if (config.safeTimeout) {
-            resolve({ out: "", err: "", json: {}, timeout: true });
-          } else reject();
+          reject(
+            new TimeoutException(
+              "Your code exceeded the timeout of " + config.timeout + "ms!"
+            )
+          );
         }, config.timeout);
       }
       this.#queue.push({
         ...config,
-        resolve(...data) {
+        trigger: {
+          incompleteCommand() {
+            reject(new IncompleteCommand());
+          },
+        },
+        resolve(out) {
           if (tm != null) clearTimeout(tm);
-          resolve(...data);
+          const { json, errjson } = extractData(out);
+
+          if (errjson != null) {
+            return handleError(errjson);
+          }
+
+          resolve(new Result(json));
         },
       });
     });
   }
 }
 
-export { Extension };
+export { Extension, Result };

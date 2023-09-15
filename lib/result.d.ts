@@ -1,46 +1,35 @@
 /**
- * Represents the result of executing a command or script.
+ * A class that holds the result after an execution
  */
-export declare class ExecResult {
+export class Result {
   /**
-   * Gets the standard output (stdout) from the command or script execution.
+   * Private member to store the array data.
+   * @private
    */
-  readonly stdout: string;
+  private _$array: any[];
 
   /**
-   * Gets the standard error (stderr) from the command or script execution.
+   * Get the array property.
+   * @returns An array containing the data.
    */
-  readonly stderr: string;
+  get $array(): any[];
 
   /**
-   * Gets the result of the execution, which can be a string, object, or an array.
-   */
-  readonly result: any;
-
-  /**
-   * Gets any error or exception information from the execution.
-   */
-  readonly err: any;
-
-  /**
-   * Gets the result as an array, converting a single result to an array if needed.
-   */
-  readonly array: any[];
-
-  /**
-   * Returns the standard output (stdout) as a string.
+   * Convert the Result object to a string.
+   * @returns A string representation of the Result object.
    */
   toString(): string;
 
   /**
-   * Indicates whether the execution was successful (no errors).
+   * Constructor for the Result class.
+   * @param obj - An object or an array to initialize the Result object.
    */
-  readonly success: boolean;
+  constructor(obj: any);
 
   /**
-   * Creates a new ExecResult instance.
-   * @param out The standard output (stdout) from the execution.
-   * @param err The standard error (stderr) from the execution.
+   * Static method to convert a Result object to an array.
+   * @param result - The Result object to convert.
+   * @returns An array containing the data from the Result object.
    */
-  constructor(out: string, err: string);
+  static array(result: Result): any[];
 }

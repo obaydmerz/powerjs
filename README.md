@@ -41,11 +41,11 @@ npm install obaydmerz/powerjs
 
 ```javascript
 // Print PowerShell Version
-import { PowerJS } from "@obaydmerz/powerjs";
+import { PowerJS } from "powerjs";
 
 const instance = new PowerJS(/* options */);
 
-instance.exec("$PSVersionTable").then(({ result }) => {
+instance.exec("$PSVersionTable").then((result) => {
   // You may notice some slowdown, that's because of the instance init process.
   // After the instance is started, you can enjoy a blazing fast environnement!
   console.log("Currently on Powershell v" + result.PSVersion.Major + "!");
@@ -53,8 +53,24 @@ instance.exec("$PSVersionTable").then(({ result }) => {
 ```
 
 ```javascript
+// Read the local user list
+import { PowerJS, Result } from "powerjs";
+
+const instance = new PowerJS();
+
+instance.exec(",(Get-LocalUser)").then((result) => {
+  // Use the , to make arrays returnable, otherwise, it will return only the first item
+  for (const user of Result.array(result)) {
+    // When fetching an array, you should wrap result with Result.array(...)
+    console.log(user.Name);
+  }
+  process.exit();
+});
+```
+
+```javascript
 // Import a DLL
-import { PowerJS } from "../index.js";
+import { PowerJS } from "powerjs";
 
 const instance = new PowerJS({
   dlls: {
@@ -79,7 +95,7 @@ instance.dll.user32
 
 ```javascript
 // Make an extension
-import { PowerJS, Extension } from "../index.js";
+import { PowerJS, Extension } from "powerjs";
 
 class MyAwesomeExtension extends Extension {
   name = "myawesomeext";
