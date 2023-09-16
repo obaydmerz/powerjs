@@ -59,6 +59,7 @@ export class PowerJS {
   #child = null;
 
   #readout = null; // Null is used to ignore the first result
+  #readerr = null;
   #started = false;
   #shell = "";
 
@@ -203,8 +204,7 @@ exit
       if (data == "PS>") {
         if (this.#readout != null) {
           this.#process(
-            this.#readout.substring(this.#readout.indexOf("\n") + 1).trim(),
-            this.#readerr.trim()
+            this.#readout.substring(this.#readout.indexOf("\n") + 1).trim()
           );
         } else {
           this.#working = false; // Powershell Session is initiated!
@@ -230,6 +230,10 @@ exit
       }
     });
 
+    this.#child.stderr.on("data", (data) => {
+      this.#readerr += data;
+    })
+
     const update = () => {
       if (!this.#working) {
         if (typeof this.#queue[0] == "object") {
@@ -248,9 +252,9 @@ exit
     }
   }
 
-  #process(out, err) {
+  #process(out) {
     if (typeof this.#queue[0] == "object")
-      this.#queue.shift().resolve(out, err);
+      this.#queue.shift().resolve(out);
     this.#working = false;
   }
 

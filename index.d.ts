@@ -8,7 +8,7 @@ interface PowerJSOptions {
   /**
    * Additional interpreters for PowerShell.
    *
-   * Always the PowerJS class will add "powershell" and "pwsh" to the end of the list.
+   * Always the PowerJS class will add "pwsh" and "powershell" to the end of the list.
    */
   additionalShellNames?: string[];
   runas?: boolean | RunAsOptions;
