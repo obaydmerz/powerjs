@@ -59,7 +59,7 @@ export class PowerJS {
   #child = null;
 
   #readout = null; // Null is used to ignore the first result
-  #readerr = null;
+  #readerr = "";
   #started = false;
   #shell = "";
 
