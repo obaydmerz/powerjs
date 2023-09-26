@@ -1,24 +1,11 @@
 /**
  * A class that holds the result after an execution
  */
-export class Result {
+export class Result<T> extends Array<T> {
   /**
-   * Private member to store the array data.
-   * @private
+   * @returns True if result is an array
    */
-  private _$array: any[];
-
-  /**
-   * Get the array property.
-   * @returns An array containing the data.
-   */
-  get $array(): any[];
-
-  /**
-   * Convert the Result object to a string.
-   * @returns A string representation of the Result object.
-   */
-  toString(): string;
+  get isArray(): boolean;
 
   /**
    * Constructor for the Result class.
@@ -28,8 +15,7 @@ export class Result {
 
   /**
    * Static method to convert a Result object to an array.
-   * @param result - The Result object to convert.
    * @returns An array containing the data from the Result object.
    */
-  static array(result: Result): any[];
+  toArray(): any[];
 }

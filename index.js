@@ -5,6 +5,7 @@ import { Extension } from "./ext/index.js";
 import { Result } from "./lib/result.js";
 import {
   IncompleteCommand,
+  StartTimeoutException,
   TimeoutException,
   handleError,
 } from "./lib/errors.js";
@@ -67,6 +68,10 @@ export class PowerJS {
 
   #imported_dlls = {};
   #dll = {}; // An interface to directly interact with imported dlls!
+
+  #timeouts = {
+    start: null,
+  };
 
   get dll() {
     return { ...this.#dll }; // Prevent dll sets
@@ -146,6 +151,11 @@ export class PowerJS {
     //console.log(generateAddType(this.#imported_dlls) + beforerun);
     this.#dll = generateDllDirectObj(this.#imported_dlls, this.exec.bind(this));
     this.#started = true;
+    this.#timeouts.start = setTimeout(() => {
+      this.#started = false;
+      this.#working = false;
+      throw new StartTimeoutException();
+    }, 4000);
   }
 
   constructor({
@@ -208,6 +218,7 @@ exit
           );
         } else {
           this.#working = false; // Powershell Session is initiated!
+          clearTimeout(this.#timeouts.start);
           assert(this.#readerr.length, 0, "Powershell init has an error!");
         } // No process() because we need to bypass introduction data (like Powershell version...)
 
@@ -232,7 +243,7 @@ exit
 
     this.#child.stderr.on("data", (data) => {
       this.#readerr += data;
-    })
+    });
 
     const update = () => {
       if (!this.#working) {
@@ -253,8 +264,7 @@ exit
   }
 
   #process(out) {
-    if (typeof this.#queue[0] == "object")
-      this.#queue.shift().resolve(out);
+    if (typeof this.#queue[0] == "object") this.#queue.shift().resolve(out);
     this.#working = false;
   }
 

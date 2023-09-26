@@ -31,17 +31,23 @@ PowerJS is a powerful JavaScript library that enables you to seamlessly integrat
 ## Installation
 
 Currently there are a way to install it directly from github.
-I will manage to push it to npm very soon!
+( For recent features )
 
 ```bash
 npm install obaydmerz/powerjs
+```
+
+Or from npm:
+( For stable relases )
+```bash
+npm install @obayd/powerjs
 ```
 
 ## Examples
 
 ```javascript
 // Print PowerShell Version
-import { PowerJS } from "powerjs";
+import { PowerJS } from "@obayd/powerjs";
 
 const instance = new PowerJS(/* options */);
 
@@ -54,14 +60,15 @@ instance.exec("$PSVersionTable").then((result) => {
 
 ```javascript
 // Read the local user list
-import { PowerJS, Result } from "powerjs";
+import { PowerJS } from "@obayd/powerjs";
 
 const instance = new PowerJS();
 
-instance.exec(",(Get-LocalUser)").then((result) => {
+instance.exec(",(Get-LocalUser)").then(function (result) {
   // Use the , to make arrays returnable, otherwise, it will return only the first item
-  for (const user of Result.array(result)) {
-    // When fetching an array, you should wrap result with Result.array(...)
+  // Read https://stackoverflow.com/questions/29973212/pipe-complete-array-objects-instead-of-array-items-one-at-a-time
+  
+  for (const user of result) {
     console.log(user.Name);
   }
   process.exit();
@@ -70,7 +77,7 @@ instance.exec(",(Get-LocalUser)").then((result) => {
 
 ```javascript
 // Import a DLL
-import { PowerJS } from "powerjs";
+import { PowerJS } from "@obayd/powerjs";
 
 const instance = new PowerJS({
   dlls: {
@@ -95,7 +102,7 @@ instance.dll.user32
 
 ```javascript
 // Make an extension
-import { PowerJS, Extension } from "powerjs";
+import { PowerJS, Extension } from "@obayd/powerjs";
 
 class MyAwesomeExtension extends Extension {
   name = "myawesomeext";

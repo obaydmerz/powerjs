@@ -1,10 +1,10 @@
 {
-  "name": "powerjs",
+  "name": "@obayd/powerjs",
   "version": "1.0.0",
   "description": "Do the powershell magic... right from your script!",
   "main": "index.js",
   "type": "module",
-  "keywords": [],
-  "author": "",
+  "keywords": ["nodejs", "node-gyp", "dll", "powershell", "terminal", "shell", "api", "automation", "process", "child-process", "native", "node-ffi"],
+  "author": "Abderrahmene Merzoug",
   "license": "ISC"
 }
