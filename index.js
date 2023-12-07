@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn } from "child_process";
 import { generateAddType, generateDllDirectObj } from "./lib/typeUtils.js";
 import { assert, extractData } from "./lib/utils.js";
 import { Extension } from "./ext/index.js";
@@ -144,23 +144,28 @@ export class PowerJS {
     }
   }
 
+  exit() {
+    if (this.#child && this.#child.stdin) {
+      // Send an exit command to the Python subprocess
+      this.#child.stdin.write("exit()\n");
+    }
+  }
+
   async start(...extensions) {
     assert(this.#started, false, "Cannot start twice!");
     this.extend(...extensions);
     this.#child.stdin.write(generateAddType(this.#imported_dlls) + beforerun);
-    //console.log(generateAddType(this.#imported_dlls) + beforerun);
     this.#dll = generateDllDirectObj(this.#imported_dlls, this.exec.bind(this));
     this.#started = true;
     this.#timeouts.start = setTimeout(() => {
       this.#started = false;
       this.#working = false;
       throw new StartTimeoutException();
-    }, 4000);
+    }, 8000);
   }
 
   constructor({
     additionalShellNames = [],
-    runas = false,
     autoStart = true,
     extensions = [],
     dlls = {},
@@ -188,29 +193,9 @@ export class PowerJS {
       throw "Cannot find a powershell interpreter! Try installing powershell or adding your one!";
     }
 
-    // TODO: Make RunAs: Coming soon
-    /* if (runas) {
-      var command = "";
-      if (typeof runas == "object") {
-        command = `
-$credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @('${
-          runas.user || ""
-        }',(ConvertTo-SecureString -String '${
-          runas.password || ""
-        }' -AsPlainText -Force))
-Start-Process ${this.#shell} -Credential ($credentials)
-exit
-`;
-      } else {
-        command = `
-Start-Process ${this.#shell} -Verb runAs
-exit
-`;
-      }
-    } */
-
     this.#child.stdout.on("data", (data) => {
       data = data.toString();
+      console.log("<--", data.toString());
       if (data == "PS>") {
         if (this.#readout != null) {
           this.#process(
@@ -234,7 +219,8 @@ exit
         this.#readout = "";
         if (this.#working && this.#queue[0]) {
           this.#child.stdin.write("\x03"); // Close that
-          this.#queue.shift().trigger.incompleteCommand();
+          if (this.#queue[0].started)
+            this.#queue.shift().trigger.incompleteCommand();
         }
       } else {
         if (this.#readout != null) this.#readout += data;
@@ -247,9 +233,13 @@ exit
 
     const update = () => {
       if (!this.#working) {
-        if (typeof this.#queue[0] == "object") {
+        if (
+          typeof this.#queue[0] == "object" &&
+          this.#queue[0].started == false
+        ) {
           let command = this.#queue[0].command;
-          this.#child.stdin.write("&{" + command + "}\n");
+          this.#child.stdin.write("&{" + command.trim() + "}\n");
+          this.#queue[0].started = true;
           this.#working = true;
         }
       }
@@ -264,7 +254,8 @@ exit
   }
 
   #process(out) {
-    if (typeof this.#queue[0] == "object") this.#queue.shift().resolve(out);
+    if (typeof this.#queue[0] == "object" && this.#queue[0].started)
+      this.#queue.shift().resolve(out);
     this.#working = false;
   }
 
@@ -291,6 +282,7 @@ exit
       }
       this.#queue.push({
         ...config,
+        started: false,
         trigger: {
           incompleteCommand() {
             reject(new IncompleteCommand());
