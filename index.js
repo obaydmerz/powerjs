@@ -7,7 +7,7 @@ import {
   IncompleteCommand,
   StartTimeoutException,
   TimeoutException,
-  handleError,
+  getError,
 } from "./lib/errors.js";
 
 const beforerun = `
@@ -293,7 +293,8 @@ export class PowerJS {
           const { json, errjson } = extractData(out);
 
           if (errjson != null) {
-            return handleError(errjson);
+            reject(getError(errjson));
+            return;
           }
 
           resolve(json ? new Result(json) : null);
