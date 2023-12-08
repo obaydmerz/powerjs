@@ -1,3 +1,5 @@
+![PowerJS cover](https://raw.githubusercontent.com/obaydmerz/powerjs/master/docs/cover.png)
+
 # PowerJS - Empower Your JavaScript with PowerShell Magic
 
 PowerJS is a powerful JavaScript library that enables you to seamlessly integrate and harness the magic of PowerShell directly from your scripts. Whether you need to automate administrative tasks, manage Windows processes, or interact with DLLs, PowerJS provides a user-friendly interface to supercharge your JavaScript applications.
@@ -31,7 +33,7 @@ PowerJS is a powerful JavaScript library that enables you to seamlessly integrat
 ## Installation
 
 Currently there are a way to install it directly from github.
-( For recent features )
+( For recent features & recommended )
 
 ```bash
 npm install obaydmerz/powerjs
@@ -130,4 +132,6 @@ myAwesomeExt.getVersion().then((versionMajor) => {
 
 ### Read more
 
-For more information and advanced usage, check out the [PowerJS Wiki](https://github.com/obaydmerz/powerjs/wiki)
+For more information and advanced usage, check out the [PowerJS Wiki](https://github.com/obaydmerz/powerjs/wiki).
+
+You can join our [discord server](https://discord.gg/2xZEbG4Mb2).
