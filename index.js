@@ -296,7 +296,7 @@ export class PowerJS {
             return handleError(errjson);
           }
 
-          resolve(new Result(json));
+          resolve(json ? new Result(json) : null);
         },
       });
     });
