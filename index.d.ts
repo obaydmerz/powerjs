@@ -87,7 +87,7 @@ declare class PowerJS {
    * @returns A promise that resolves with the execution result.
    * @throws If the shell isn't initiated yet.
    */
-  exec(config: PowerJSExecConfig | String): Promise<Result>;
+  exec(config: PowerJSExecConfig | string): Promise<Result>;
 
   /**
    * Imports a DLL and its definitions for use in PowerShell commands.
@@ -95,7 +95,7 @@ declare class PowerJS {
    * @param defenition The DLL definitions.
    * @throws If DLLs cannot be imported after starting.
    */
-  importDll(dllpath: string, defenition: Record<string, any>): void;
+  importDll(dllpath: string, defenition: Record<string, unknown>): void;
 
   /**
    * Get an extension by class or name.
@@ -121,7 +121,8 @@ declare class PowerJS {
      */
     readonly [name: string]: Record<
       string,
-      Record<string, Function | String | Number | Boolean>
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      Record<string, Function | string | number | boolean>
     >;
   };
 }

@@ -11,11 +11,11 @@ export class Result<T> extends Array<T> {
    * Constructor for the Result class.
    * @param obj - An object or an array to initialize the Result object.
    */
-  constructor(obj: any);
+  constructor(obj: unknown);
 
   /**
    * Static method to convert a Result object to an array.
    * @returns An array containing the data from the Result object.
    */
-  toArray(): any[];
+  toArray(): unknown[];
 }
