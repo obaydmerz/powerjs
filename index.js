@@ -206,7 +206,6 @@ export class PowerJS {
   #setChildStreams() {
     this.#child.stdout.on("data", (data) => {
       data = data.toString();
-      console.log("<--", data.toString());
       if (data == "PS>") {
         this.#processPS();
       } else if (
