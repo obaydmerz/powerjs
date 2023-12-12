@@ -1,4 +1,5 @@
 import { Extension, ExtensionClass } from "./ext/index.js";
+import { ErrorRecord } from "./lib/errors.js";
 import { Result } from "./lib/result.js";
 
 /**
@@ -125,4 +126,4 @@ declare class PowerJS {
   };
 }
 
-export { PowerJS, Extension, Result, PowerJSOptions, RunAsOptions, PowerJSExecConfig };
+export { PowerJS, ErrorRecord, Extension, Result, PowerJSOptions, RunAsOptions, PowerJSExecConfig };
