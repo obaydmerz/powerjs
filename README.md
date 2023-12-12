@@ -132,6 +132,6 @@ myAwesomeExt.getVersion().then((versionMajor) => {
 
 ### Read more
 
-For more information and advanced usage, check out the [PowerJS Wiki](https://github.com/obaydmerz/powerjs/wiki).
+For more information and advanced usage, check out the [PowerJS Wiki](https://powerjs.gitbook.io/powerjs/).
 
 You can join our [discord server](https://discord.gg/2xZEbG4Mb2).

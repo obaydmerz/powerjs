@@ -1,6 +1,6 @@
 {
   "name": "@obayd/powerjs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Do the powershell magic... right from your script!",
   "main": "index.js",
   "homepage": "https://github.com/obaydmerz/powerjs",
