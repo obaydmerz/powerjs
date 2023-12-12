@@ -4,6 +4,7 @@ import { assert, extractData } from "./lib/utils.js";
 import { Extension } from "./ext/index.js";
 import { Result } from "./lib/result.js";
 import {
+  ErrorRecord,
   IncompleteCommand,
   StartTimeoutException,
   TimeoutException,
@@ -304,4 +305,4 @@ export class PowerJS {
   }
 }
 
-export { Extension, Result };
+export { Extension, Result, ErrorRecord };
