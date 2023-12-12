@@ -88,7 +88,7 @@ export class PowerJS {
 
     const dllname = dllpath.match(/[^\\/]+\.dll$/g).reverse()[0];
     dllpath = dllpath.replace(/\\/g, "\\\\");
-    if (dllname == undefined) throw "The path should end with a *.dll";
+    if (dllname == undefined) throw new Error("The path should end with a *.dll");
 
     var name = dllname.split(".");
     name.pop();
@@ -165,6 +165,81 @@ export class PowerJS {
     }, 8000);
   }
 
+  #findOptimalShell(additionalShellNames) {
+    // Find optimal shell
+    for (const sname of additionalShellNames) {
+      try {
+        this.#child = spawn(sname);
+        this.#shell = sname;
+        break;
+      } catch (e) {
+        // Report error?
+      }
+    }
+  }
+
+  #processPS() {
+    if (this.#readout != null) {
+      this.#process(
+        this.#readout.substring(this.#readout.indexOf("\n") + 1).trim()
+      );
+    } else {
+      this.#working = false; // Powershell Session is initiated!
+      clearTimeout(this.#timeouts.start);
+      assert(this.#readerr.length, 0, "Powershell init has an error!");
+    } // No process() because we need to bypass introduction data (like Powershell version...)
+
+    this.#readout = "";
+    this.#readerr = "";
+  }
+
+  #processIncompleteCommand() {
+    this.#readerr = "";
+    this.#readout = "";
+    if (this.#working && this.#queue[0]) {
+      this.#child.stdin.write("\x03"); // Close that
+      if (this.#queue[0].started)
+        this.#queue.shift().trigger.incompleteCommand();
+    }
+  }
+
+  #setChildStreams() {
+    this.#child.stdout.on("data", (data) => {
+      data = data.toString();
+      console.log("<--", data.toString());
+      if (data == "PS>") {
+        this.#processPS();
+      } else if (
+        data.startsWith(">") &&
+        this.#readout != null &&
+        (this.#readout.length == 0 || this.#readout.endsWith("\n"))
+      ) {
+        this.#processIncompleteCommand();
+      } else {
+        if (this.#readout != null) this.#readout += data;
+      }
+    });
+
+    this.#child.stderr.on("data", (data) => {
+      this.#readerr += data;
+    });
+  }
+
+  #update() {
+    if (!this.#working) {
+      if (
+        typeof this.#queue[0] == "object" &&
+        this.#queue[0].started == false
+      ) {
+        let command = this.#queue[0].command;
+        this.#child.stdin.write("&{" + command.trim() + "}\n");
+        this.#queue[0].started = true;
+        this.#working = true;
+      }
+    }
+    setTimeout(this.#update.bind(this), 200); // Update every 200ms
+  }
+
   constructor({
     additionalShellNames = [],
     autoStart = true,
@@ -180,74 +255,13 @@ export class PowerJS {
       }
     }
 
-    // Find optimal shell
-
-    for (const sname of additionalShellNames) {
-      try {
-        this.#child = spawn(sname);
-        this.#shell = sname;
-        break;
-      } catch (e) {}
-    }
-
+    this.#findOptimalShell(additionalShellNames)
     if (this.#child == null) {
-      throw "Cannot find a powershell interpreter! Try installing powershell or adding your one!";
+      throw new Error("Cannot find a powershell interpreter! Try installing powershell or adding your one!");
     }
+    this.#setChildStreams();
 
-    this.#child.stdout.on("data", (data) => {
-      data = data.toString();
-      console.log("<--", data.toString());
-      if (data == "PS>") {
-        if (this.#readout != null) {
-          this.#process(
-            this.#readout.substring(this.#readout.indexOf("\n") + 1).trim()
-          );
-        } else {
-          this.#working = false; // Powershell Session is initiated!
-          clearTimeout(this.#timeouts.start);
-          assert(this.#readerr.length, 0, "Powershell init has an error!");
-        } // No process() because we need to bypass introduction data (like Powershell version...)
-
-        this.#readout = "";
-        this.#readerr = "";
-      } else if (
-        data.startsWith(">") &&
-        this.#readout != null &&
-        (this.#readout.length == 0 || this.#readout.endsWith("\n"))
-      ) {
-        // Incomplete command!!!
-        this.#readerr = "";
-        this.#readout = "";
-        if (this.#working && this.#queue[0]) {
-          this.#child.stdin.write("\x03"); // Close that
-          if (this.#queue[0].started)
-            this.#queue.shift().trigger.incompleteCommand();
-        }
-      } else {
-        if (this.#readout != null) this.#readout += data;
-      }
-    });
-
-    this.#child.stderr.on("data", (data) => {
-      this.#readerr += data;
-    });
-
-    const update = () => {
-      if (!this.#working) {
-        if (
-          typeof this.#queue[0] == "object" &&
-          this.#queue[0].started == false
-        ) {
-          let command = this.#queue[0].command;
-          this.#child.stdin.write("&{" + command.trim() + "}\n");
-          this.#queue[0].started = true;
-          this.#working = true;
-        }
-      }
-      setTimeout(update, 200); // Update every 200ms
-    };
-
-    update();
+    this.#update();
 
     if (autoStart) {
       this.start(...(Array.isArray(extensions) ? extensions : []));
