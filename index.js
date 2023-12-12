@@ -88,7 +88,8 @@ export class PowerJS {
 
     const dllname = dllpath.match(/[^\\/]+\.dll$/g).reverse()[0];
     dllpath = dllpath.replace(/\\/g, "\\\\");
-    if (dllname == undefined) throw new Error("The path should end with a *.dll");
+    if (dllname == undefined)
+      throw new Error("The path should end with a *.dll");
 
     var name = dllname.split(".");
     name.pop();
@@ -254,9 +255,11 @@ export class PowerJS {
       }
     }
 
-    this.#findOptimalShell(additionalShellNames)
+    this.#findOptimalShell(additionalShellNames);
     if (this.#child == null) {
-      throw new Error("Cannot find a powershell interpreter! Try installing powershell or adding your one!");
+      throw new Error(
+        "Cannot find a powershell interpreter! Try installing powershell or adding your one!"
+      );
     }
     this.#setChildStreams();
 
@@ -311,7 +314,9 @@ export class PowerJS {
             return;
           }
 
-          resolve(json ? new Result(json) : null);
+          resolve(
+            typeof json != "object" ? json : json ? new Result(json) : null
+          );
         },
       });
     });
