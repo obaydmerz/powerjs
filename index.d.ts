@@ -21,6 +21,11 @@ interface PowerJSOptions {
   autoStart?: boolean;
 
   /**
+   * Disable this if you want to load user profile in powershell.
+   */
+  noProfile?: boolean;
+
+  /**
    * Extensions to import.
    */
   extensions: ExtensionClass[];
